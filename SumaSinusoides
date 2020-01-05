@@ -1,0 +1,124 @@
+""""
+Este programa muestra las consecuencias de suma (o superposición) entre sinusoides que se van desfasando.
+Se pueden distinguir claramente la superposición constructiva (Amplitud suma = 2) y superposición destructiva 
+(Amplitud suma = 0).
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import matplotlib.ticker as tck
+
+from matplotlib import rc
+from IPython.display import HTML
+
+#f = 20 #Hz frecuencia
+w = np.pi#2*np.pi*f # rad/s frecuencia angular
+fase0 = 0 # fase
+A = 1 # amplitud
+
+# longitud de eje x para dibujar
+long_x = 4
+n_ptos = 200
+x = np.linspace(0,long_x,n_ptos)
+
+# crear las figuras y respectivos plots
+plt.style.use('dark_background') # fondo negro
+fig = plt.figure(figsize=(8,10)) # se regula el tamaño de la figura completa, para que la circunferencia no se deforme
+ax0 = plt.subplot2grid((8, 1), (0, 0), rowspan=1) # la leyenda que se distinga bien
+ax1 = plt.subplot2grid((8, 1), (1, 0), rowspan=2) # sinusoides 1y 2
+ax2 = plt.subplot2grid((8, 1), (4, 0), rowspan=4) # suma de las sinusoides
+width_line = 2 # ancho de las líneas
+
+# información ax0: Hecho únicamente para poner la leyenda más grande y clara
+ax0.tick_params(labelsize=15)
+ax0.set_xlim(0, long_x)
+ax0.set_ylim(-1.2, 1.2)
+ax0.spines['right'].set_visible(False)
+ax0.spines['top'].set_visible(False)
+ax0.spines['bottom'].set_visible(False)
+ax0.spines['left'].set_visible(False)
+ax0.get_yaxis().set_visible(False)
+ax0.get_xaxis().set_visible(False)
+# elementos para la leyenda del plot siguiente
+line1_plot, = ax0.plot([], [], lw=2.5,color='#9c99f7', label="Sinusoide 1")
+line2_plot, = ax0.plot([], [], lw=1.5,color='#f7a3a3', label="Sinusoide 2")
+ax0.legend(loc='best',fontsize=15, ncol=2, mode="expand", borderaxespad=0.)
+
+# información ax1
+ax1.tick_params(labelsize=15)
+ax1.set_xlim(0, long_x)
+ax1.set_ylim(-1.2, 1.2)
+ax1.spines['right'].set_visible(False)
+ax1.spines['top'].set_visible(False)
+#ax1.spines['bottom'].set_visible(False)
+#ax1.spines['left'].set_visible(False)
+#ax1.get_yaxis().set_visible(False)
+#ax1.get_xaxis().set_visible(False)
+ax1.spines['bottom'].set_position('zero')
+ax1.spines['bottom'].set_color('#c8dfe5')
+ax1.tick_params(axis='x', colors='#c8dfe5', size=5)
+ax1.spines['left'].set_position('zero')
+ax1.spines['left'].set_color('#c8dfe5')
+ax1.tick_params(axis='y', colors='#c8dfe5', size=5)
+ax1.set_yticks([-1,0,1])
+ax1.set_xticks([1,2,3,4])
+
+
+# información ax2
+ax2.tick_params(labelsize=15)
+ax2.set_xlim(0, long_x)
+ax2.set_ylim(-2.2, 2.2)
+ax2.spines['right'].set_visible(False)
+ax2.spines['top'].set_visible(False)
+#ax2.spines['bottom'].set_visible(False)
+#ax2.spines['left'].set_visible(False)
+#ax2.get_yaxis().set_visible(False)
+#ax2.get_xaxis().set_visible(False)
+ax2.spines['bottom'].set_position('zero')
+ax2.spines['bottom'].set_color('#c8dfe5')
+ax2.tick_params(axis='x', colors='#c8dfe5', size=5)
+ax2.spines['left'].set_position('zero')
+ax2.spines['left'].set_color('#c8dfe5')
+ax2.tick_params(axis='y', colors='#c8dfe5', size=5)
+ax2.set_yticks([-2,-1,0,1,2])
+ax2.set_xticks([1,2,3,4])
+ax2.set_title('Suma de las Sinusoides', color='w',fontsize=15)
+
+#ax1.xaxis.set_major_formatter(tck.FormatStrFormatter('%g $\pi$'))
+#ax1.xaxis.set_major_locator(tck.MultipleLocator(base=1.0))
+#ax1.xaxis.get_offset_text().set_fontsize(24)
+
+# información de las líneas
+lineSin1, = ax1.plot([], [], lw=2.5,color='#9c99f7', label="Sinusoide 1")
+lineSin2, = ax1.plot([], [], lw=1.5,color='#f7a3a3', label="Sinusoide 2")
+lineSuma, = ax2.plot([], [], lw=2.5,color='#c8dfe5')
+
+
+def init(): 
+    # creating an empty plot/frame
+    lineSin1.set_data( x , A*np.sin(w*x) )
+    lineSin2.set_data( x , A*np.sin(w*x-fase0) )
+    lineSuma.set_data([],[])
+    return lineSin1, lineSin2, lineSuma,
+
+def cuadro_animacion(i):  
+    # Calcula las  sinusoides
+    s1 = A*np.sin(w*x)
+    s2 = A*np.sin(w*x+i)
+    s3 = s1+s2
+    lineSin1.set_data( x , s1 )
+    lineSin2.set_data( x , s2 )
+    lineSuma.set_data( x , s3 )
+    titulo1= 'desfase' + ' = ' + str(round(i/np.pi,1)) + " $\pi$ "
+    ax1.set_title(titulo1, color='#c8dfe5',fontsize=15)    
+    return lineSin1, lineSin2, lineSuma
+
+# generar la animación
+animation = FuncAnimation(fig, func=cuadro_animacion, init_func=init, frames=np.linspace(0, 2*np.pi, 200),blit=False,interval = 50)#,repeat=True)#, save_count=200)
+
+# crea la animación
+HTML(animation.to_html5_video())
+
+# para grabar la animación
+animation.save('Desfase_senales_total.mp4') 
