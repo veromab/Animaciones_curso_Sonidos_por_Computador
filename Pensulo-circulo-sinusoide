@@ -1,0 +1,170 @@
+""""
+Este programa grafica el movimiento del péndulo. El cual va variando su ángulo theta con una función coseno.
+Este desplazamiento del péndulo se proyecta a un movimiento oscilatorio en el eje "x", con el cual se grafica 
+un movimiento oscilatorio en un círculo y después hacia una sinusoide.
+
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as cl
+from matplotlib.animation import FuncAnimation # permite crear la animación
+from matplotlib.patches import ConnectionPatch # permite graficarlíneas entre distintos plots
+
+from matplotlib import rc
+from IPython.display import HTML
+
+# Variables
+g = 9.80665
+L = 10
+theta_0 = np.pi/15
+w_pend = np.sqrt(g/L) # frecuencia angular del péndulo
+T_pend = (2*np.pi)/w_pend # periodo del movimiento del péndulo
+ciclo_anim = 3*T_pend # cilos que se representarán en la función trigonométrica.
+radio = L*np.sin(theta_0)
+# permite graficar el círculo en ax2
+vector_ciclo = np.linspace(0,2.1*np.pi,500)
+x_cirCompleto = radio*np.cos(w_pend*vector_ciclo)
+y_cirCompleto = radio*np.sin(w_pend*vector_ciclo)
+
+# gráfico de la sinusoide
+x_sinCompleto = np.linspace(0,3*T_pend,500)
+y_sinCompleto = radio*np.sin(w_pend*x_sinCompleto)
+
+# crear vectores a los que se les irá ingresando las posiciones
+x_data = [0,0]
+y_data = [0,0]
+x_cirData, y_cirData = [0,0], [0,0]
+x_sinData, y_sinData = [], []
+x_une, y_une = [0,0], [0,0]
+# crear las figuras y respectivos plots
+plt.style.use('dark_background') # fondo negro
+fig = plt.figure(figsize=(9,9)) # se regula el tamaño de la figura completa, para que la circunferencia no se deforme
+ax1 = plt.subplot2grid((3, 3), (0, 0), rowspan=2) # para graficar el péndulo
+ax2 = plt.subplot2grid((3, 3), (2, 0), colspan=1) # para graficar la círculo
+ax3 = plt.subplot2grid((3, 3), (2, 1), colspan=2) # para graficar el sinusoide
+width_line = 2 # ancho de las líneas
+
+# información ax1
+ax1.set_xlim(-1.3*radio, 1.3*radio)
+ax1.set_ylim(-1.2*L,0)
+ax1.spines['right'].set_visible(False)
+ax1.spines['top'].set_visible(False)
+ax1.spines['bottom'].set_visible(False)
+ax1.spines['left'].set_visible(False)
+ax1.get_yaxis().set_visible(False)
+ax1.get_xaxis().set_visible(False)
+line, = ax1.plot([], [], lw=width_line,color='#c8dfe5') # L del péndulo
+line0, = ax1.plot([], [], color='#c8dfe5', marker='o', markeredgecolor='#c8dfe5') # base del péndulo
+line1, = ax1.plot([], [], color='red', marker='o', markeredgecolor='r') # proyección del péndulo eje x
+ax1.annotate(s='', xy=(-1.2*radio,-1.1*L), xytext=(1.2*radio,-1.1*L), arrowprops={'arrowstyle': '<->', 'lw':1.5, 'color': 'red'})
+#ax1.spines['bottom'].set_position(-L)
+#ax1.spines['bottom'].set_color('#c8dfe5')
+ax1.tick_params(axis='x', colors='#c8dfe5', size=5)
+ax1.set_xticks([-radio,0,radio])
+
+
+# información ax2
+ax2.set_xlim(-1.3*radio, 1.3*radio)
+ax2.set_ylim(-1.3*radio, 1.3*radio)
+ax2.spines['right'].set_visible(False)
+ax2.spines['top'].set_visible(False)
+ax2.spines['bottom'].set_visible(False)
+ax2.spines['left'].set_visible(False)
+ax2.get_xaxis().set_visible(False)
+ax2.get_yaxis().set_visible(False)
+lineCir, = ax2.plot(x_cirCompleto, y_cirCompleto, lw=width_line,color='#c8dfe5')
+line0Cir, = ax2.plot([], [], color='red', marker='o', markeredgecolor='r')
+line1Cir, = ax2.plot([], [], lw=width_line, color='b')
+
+# información ax3
+ax3.set_xlim(-0.5, ciclo_anim+0.4)
+ax3.set_ylim(-1.3*radio, 1.3*radio)
+ax3.spines['right'].set_visible(False)
+ax3.spines['top'].set_visible(False)
+#ax3.spines['bottom'].set_visible(False)
+#ax3.spines['left'].set_visible(False)
+ax3.get_yaxis().set_visible(False)
+ax3.get_xaxis().set_visible(False)
+ax3.spines['bottom'].set_position('zero')
+ax3.spines['bottom'].set_color('#c8dfe5')
+ax3.spines['left'].set_position('zero')
+ax3.spines['left'].set_color('#c8dfe5')
+ax3.tick_params(axis='y', colors='#c8dfe5', size=5)
+ax1.set_xticks([-2,-1,0,1,2])
+# línea de la sinusoide
+line0Sin, = ax3.plot([], [], color='red', marker="o", markeredgecolor='r')
+
+
+# línea que une péndulo con círculo
+con = ConnectionPatch(xyA=[0,0], xyB=[0,0], coordsA="data", coordsB="data",axesA=ax2, axesB=ax1, color="red",linestyle='--')
+ax2.add_artist(con)
+# línea que une círculo con sinusoide
+con2 = ConnectionPatch(xyA=[0,0], xyB=[0,0], coordsA="data", coordsB="data",axesA=ax3, axesB=ax2, color="red",linestyle='--')
+ax3.add_artist(con2)
+
+def init():  
+    # crea el plot inicial
+    line.set_data([], [])
+    line0.set_data([], [])
+    line1.set_data([], [])
+    line0Cir.set_data([], [])
+    line0Sin.set_data([], [])
+    return line, line0, line1, line0Cir, line0Sin
+
+oscilador = np.zeros(2)
+oscilador[0] = 1.1
+signo = 1
+def animation_frame(i):
+    global con, con2 # variables globales para que puedan ser removidas
+    con.remove() # borra la línea que une péndulo con círculo
+    con2.remove() # borra la línea que une círculo con sinusoide
+    # calcula posición del péndulo
+    oscilador[1] = np.cos(w_pend*i)
+    x = L*np.sin(theta_0*oscilador[1])
+    y = -L*np.cos(theta_0*oscilador[1])
+    x_data[1] = x
+    y_data[1] = y
+    if oscilador[0]>oscilador[1]:
+        signo = 1
+    else:
+        signo = -1
+    oscilador[0] = oscilador[1] 
+    # calcula posición en el círculo
+    x_cirData[1] = x # mismo valor de x que el péndulo
+    y_cirData[1] = signo*np.sqrt(radio**2-x_cirData[1]**2)# se despeja y desde el valor x
+    # Calcula las posiciones en la sinusoide
+    y_sin = y_cirData[1]
+    x_sin = i#np.arcsin(y_sin)
+    x_sinData.append(x_sin)
+    y_sinData.append(y_sin)
+    ## setea la información en las respectivas líneas para la animación
+    # información líneas de péndulo
+    line.set_xdata(x_data)
+    line.set_ydata(y_data)
+    line0.set_data(x, y)
+    line1.set_data(x, -1.1*L)
+    # información líneas del círculo
+    ax3.plot(x_sinCompleto, y_sinCompleto, lw=width_line,color='#c8dfe5')
+    line1Cir.set_data(x_cirData,y_cirData)
+    line0Cir.set_data(x_cirData[1],  y_cirData[1])
+    # información líneas de la sinusoide
+    #lineSin.set_data(x_sinData, y_sinData)
+    line0Sin.set_data(x_sin, y_sin)
+    # crea las coordenadas para la línea que une péndulo con circunferencia
+    xy_pendulo = (x, -1.1*L)
+    xy_circulo = (x_cirData[1], y_cirData[1])
+    con = ConnectionPatch(xyA=xy_circulo, xyB=xy_pendulo, coordsA="data", coordsB="data",axesA=ax2, axesB=ax1, color="red",linestyle='--', lw=1.5)
+    ax2.add_artist(con)
+    # crea las coordenadas para la línea que une círculo con sinusoide
+    xy_sinus = (x_sin, y_sin)
+    con2 = ConnectionPatch(xyA=xy_sinus, xyB=xy_circulo, coordsA="data", coordsB="data",axesA=ax3, axesB=ax2, color="red",linestyle='--', lw=1.5)
+    ax3.add_artist(con2)
+    ax3.plot(x_sinCompleto, y_sinCompleto, lw=width_line,color='#c8dfe5')
+
+    return line, line0, lineCir, line0Cir, line1Cir, line0Sin
+# generar la animación
+animation = FuncAnimation(fig, func=animation_frame, init_func=init, frames=np.linspace(0, ciclo_anim, 300),blit=False,interval = 50)#,repeat=True)#, save_count=200)
+# al modificar la separacion entre cada intervalo en np.arange se graba más lento
+
+plt.show() # muestra la animación
