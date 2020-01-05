@@ -1,0 +1,71 @@
+""""
+Se grafica el desplazamiento de las partículas para un frente de onda en una onda lingitudinal.
+No se consideró la ecuación de onda, ya que se dio prioridad a la animación.
+
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import animation
+
+from matplotlib import rc
+from IPython.display import HTML
+
+## Datos de los puntos con valores en polares
+n = 15
+max_r = 4
+
+r0 = np.linspace(0.2,max_r,n)
+
+r=[]
+theta=[]
+num=10
+for x in range(n):
+    r = np.append(r,r0[x]*np.ones(num*x))
+    theta = np.append(theta,np.linspace(0,2*np.pi,num*x))
+
+N = len(r)
+r_min = np.where(min(r))
+
+a= np.zeros((N,2))
+a[:,1]=r
+a[:,0]=theta
+
+## Datos de la onda
+f = 2 #Hz frecuencia
+w = 2*np.pi*f
+
+## Información de los plots
+plt.style.use('dark_background') # fondo negro
+fig = plt.figure(figsize=(9,9))
+ax1 = plt.subplot(111, polar=True)
+scat = ax1.scatter(theta, r, c='#c8dfe5', s=8, alpha=1)
+size0 = r[r_min]*5000
+scat0 = ax1.scatter(0, 0, c='#c8dfe5', s=size0)
+## Datos de los ejes
+# Límites del radio
+ax1.set_ylim(0, max_r)
+# Eje del radio
+ax1.get_yaxis().set_visible(False)
+# Eje de ángulo
+ax1.get_xaxis().set_visible(False)
+
+
+def init():
+    scat.set_offsets(a)
+    scat0 = ax1.scatter(0, 0, c='#c8dfe5', s=size0)
+    return scat, scat0
+
+def animation_frame(t):
+    a[:,1] = r + 0.2*np.sin(w*t-r*np.pi)
+    size1 = a[r_min,1]*8000-100
+    scat.set_offsets(a)
+    scat0.set_sizes([size1])
+    return scat, scat0
+
+anim = animation.FuncAnimation(fig, animation_frame, init_func=init, frames=np.linspace(0, 3, 200), interval=100, blit=False, repeat=False)
+
+# crea la animación
+HTML(anim.to_html5_video())
+
+# para grabar la animación
+anim.save('frenteOnda.mp4') 
