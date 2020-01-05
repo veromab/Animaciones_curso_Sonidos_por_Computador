@@ -11,8 +11,8 @@ import matplotlib.colors as cl
 from matplotlib.animation import FuncAnimation # permite crear la animación
 from matplotlib.patches import ConnectionPatch # permite graficarlíneas entre distintos plots
 
-from matplotlib import rc
-from IPython.display import HTML
+from matplotlib import rc # permite ver la animación en la web
+from IPython.display import HTML rc # permite ver la animación en la web
 
 # Variables
 g = 9.80665
@@ -168,3 +168,9 @@ animation = FuncAnimation(fig, func=animation_frame, init_func=init, frames=np.l
 # al modificar la separacion entre cada intervalo en np.arange se graba más lento
 
 plt.show() # muestra la animación
+
+# crea la animación en Jypiter Notebook
+HTML(animation.to_html5_video())
+
+# para grabar la animación
+animation.save('nombre.mp4') 
