@@ -1,0 +1,91 @@
+""""
+El programa grafica la relación entre la presión sonora en N/m^2 y su correspondiente valor en dB (SPL).
+Aunque se usa una sola, se dejaron las dos funciones para ir de preión a SPL y para ir de SPL a presión.
+
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+
+from matplotlib import rc
+from IPython.display import HTML
+
+# vactor con los valores de presión
+min_p = 2*10**(-5)
+max_p = 2 # máxima presión (100dB)
+dp_plot = 0.2
+
+def spl(p): # función para calcular en nivel de presión sonora a partir de presión
+    global min_p
+    spl = 20*np.log10(p/min_p)
+    return spl
+
+def i_spl(spl): # función para calcular presión a partir del nivel de presión sonora
+    global min_p
+    p = min_p*10**(spl/20)
+    return p
+    
+
+# crea la figura
+plt.style.use('dark_background') # fondo negro
+fig = plt.figure(figsize=(10,10)) # se regula el tamaño de la figura completa, para que la circunferencia no se deforme
+ax1 = plt.subplot2grid((1, 4), (0, 1), colspan=2) # para graficar la círculo
+
+ax1.set_xlabel('Nivel de presión sonora dB', c='#c8dfe5', fontsize=15)
+ax1.set_ylabel('Presión sonora N/m$^2$', c='#c8dfe5', fontsize=15)
+
+ax1.spines['right'].set_visible(False)
+ax1.spines['top'].set_visible(False)
+ax1.set_xlim(0, 105)
+ax1.set_ylim(-0.1, 2.05)
+ax1.tick_params(axis='x', colors='#c8dfe5', size=5,labelsize=15) 
+ax1.tick_params(axis='y', colors='#c8dfe5', size=5,labelsize=15)
+ax1.spines['bottom'].set_position('zero')
+ax1.spines['bottom'].set_color('#c8dfe5')
+ax1.spines['left'].set_position('zero')
+ax1.spines['left'].set_color('#c8dfe5')
+ax1.set_xticks([20,40,60,80,100])
+ax1.set_yticks([0,0.2,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2])
+
+# se crean las lineas para la animación
+line, = ax1.plot([], [], lw=2,color='r')
+line0, = ax1.plot([], [], color='r', marker="o", markersize=10, markeredgecolor='r')
+line_p, = ax1.plot([], [], color='#f7a3a3',linestyle='dashed')
+line_spl, = ax1.plot([], [], color='#f7a3a3',linestyle='dashed')
+
+curva_x = [0,0]
+curva_y = [0,0]
+
+def init():
+    # setea el inicio de la gráfica
+    line.set_data([], [])
+    line0.set_data([], [])
+    line_p.set_data([], [])
+    line_spl.set_data([], [])
+    return line_p, line_spl, line, line0,
+
+def cuadro_animacion(i):
+    # calcula en spl
+    spl = round(i,1)
+    p = round(i_spl(i),5)
+    # setea la información en las respectivas líneas para la animación
+    curva_x.append(spl)
+    curva_y.append(p)
+    line0.set_data(spl,p)
+    line.set_data(curva_x,curva_y)
+    line_p.set_data([0,spl],[p,p])
+    line_spl.set_data([spl,spl],[0,p])
+    if spl % 10 == 0:        
+        titulo1= str(p) + ' N/m^2 = ' + str(spl) + ' dB '
+        ax1.set_title(titulo1, color='#c8dfe5',fontsize=15) 
+    return line_p, line_spl, line, line0,
+
+# generar la animación
+animacion = FuncAnimation(fig, func=cuadro_animacion, init_func=init, frames = np.append(np.arange(0, 100, 0.5),[100]),interval = 50)
+
+# crea la animación
+HTML(animacion.to_html5_video())
+
+# para grabar la animación
+animacion.save('curva_db-spl.mp4') 
