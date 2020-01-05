@@ -1,0 +1,65 @@
+""""
+Una simple animación donde la amplitud de la sinusoide va disminuyendo con el tiempo.
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib.patches import ConnectionPatch
+
+from matplotlib import rc
+from IPython.display import HTML
+
+w_pend = 5 # frecuencia angular del péndulo
+T_pend = (2*np.pi)/w_pend # periodo del movimiento del péndulo
+ciclo_anim = 3*T_pend # ciclos que se representarán en la función trigonométrica.
+x_sin = np.linspace(0, 3.5, 1000)
+
+# crear las figuras y respectivos plots
+plt.style.use('dark_background') # fondo negro
+fig = plt.figure(figsize=(9,3)) # se regula el tamaño de la figura completa, para que la circunferencia no se deforme
+ax3 = plt.subplot2grid((1, 1), (0, 0), colspan=1) # para graficar el sinusoide
+width_line = 2 # ancho de las líneas
+
+# información ax3
+ax3.set_xlim(0, ciclo_anim+0.4)
+ax3.set_ylim(-1.2, 1.2)
+ax3.spines['right'].set_visible(False)
+ax3.spines['top'].set_visible(False)
+ax3.spines['bottom'].set_visible(False)
+#ax3.spines['left'].set_visible(False)
+#ax3.get_yaxis().set_visible(False)
+ax3.get_xaxis().set_visible(False)
+ax3.spines['left'].set_position('zero')
+ax3.spines['left'].set_color('#c8dfe5')
+ax3.set_yticks([-1,0,1])
+ax3.tick_params(axis='y', colors='#c8dfe5', size=5,labelsize=15)
+ax3.set_ylabel('Amplitud', c='#c8dfe5', fontsize=15)
+# información de las  flechas
+ax3.arrow(-0.2, 0, ciclo_anim+0.3, 0, head_width=0.1, head_length=0.1, fc='#c8dfe5', ec='#c8dfe5')
+ax3.text(ciclo_anim, -0.4, r'tiempo', fontsize=15,color='#c8dfe5')
+lineSin, = ax3.plot([], [], lw=width_line,color='#c8dfe5')
+
+def init(): 
+    # crea el plot inicial
+    lineSin.set_data( x_sin , np.sin(2 * np.pi * x_sin) )
+    return lineSin,
+
+def animation_frame(i): 
+    # Calcula las posiciones en la sinusoide
+    A = (1-i/ciclo_anim)
+    y_sin = A*np.sin(2 * np.pi * x_sin)
+    lineSin.set_data(x_sin, y_sin)
+    return lineSin,
+
+# generar la animación
+animation = FuncAnimation(fig, func=animation_frame, init_func=init, frames=np.linspace(0, ciclo_anim, 200),blit=False,interval = 50)
+# al modificar la separacion entre cada intervalo en np.arange se graba más lento
+
+plt.show() # muestra la animación
+
+# crea la animación
+HTML(animation.to_html5_video())
+
+# para grabar la animación
+animation.save('nombre.mp4') 
